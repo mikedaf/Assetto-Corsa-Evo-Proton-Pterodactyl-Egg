@@ -10,6 +10,7 @@ Standard Assetto Corsa Evo server images are not designed for Pterodactyl’s re
 
 * A running Pterodactyl Panel instance.
 * SSH access to your Pterodactyl Host Node (the server running the Docker daemon).
+* Docker installed on Host
 
 ## Step 1: Host Node Preparation
 
