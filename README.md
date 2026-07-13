@@ -10,7 +10,7 @@ Standard Assetto Corsa Evo server images are not designed for Pterodactyl’s re
 
 * A running Pterodactyl Panel instance.
 * SSH access to your Pterodactyl Host Node (the server running the Docker daemon).
-* Docker installed on Host
+* Docker Installed on Host
 
 ## Step 1: Host Node Preparation
 
@@ -36,6 +36,8 @@ EOF
 docker build -t acevo-ptero:latest .
 ```
 
+*Troubleshooting Note:* The egg's configuration is hardcoded to look for the exact `acevo-ptero:latest` docker image[cite: 1]. Do not alter the tag in the build command, or Pterodactyl will fail to deploy the server[cite: 1].
+
 ## Step 2: Import the Egg
 
 1. Download the `egg-assetto-corsa-evo.json` file from this repository to your local computer.
@@ -47,9 +49,10 @@ docker build -t acevo-ptero:latest .
 ## Step 3: Create the Server
 
 1. Create a new server in Pterodactyl using the Assetto Corsa Evo (Proton) Egg.
-2. In the **Startup** tab, fill in the required variables (Steam Username/Password, Ports).
-    * *Note: It is highly recommended to use a dedicated "burner" Steam account for this to protect your personal account credentials.*
-3. Start the server and wait for the files to download.
+2. In the **Startup** tab, fill in the required variables. You will need to provide the Server TCP Port, Dashboard Password, Steam Username, Steam Password, and Server UDP Port[cite: 1].
+    * *Note: It is highly recommended to use a dedicated "burner" Steam account for the Steam Username and Steam Password variables rather than your personal account[cite: 1].*
+3. **Network Allocations:** When allocating network ports, only assign the Game TCP and Game UDP ports[cite: 1]. Do NOT allocate port `8090` in Pterodactyl[cite: 1].
+4. Start the server and wait for the files to download.
 
 ## Step 4: Configuration & Usage
 
@@ -57,17 +60,20 @@ This server is designed to be managed via its built-in Web Dashboard, not by edi
 
 ### ⚠️ IMPORTANT: Managing Settings
 
-* Do NOT add extra variables to the Pterodactyl panel for Server Name, Password, or Rules.
-* The server's startup script monitors these variables. If you change them in the panel, they will overwrite your Web Dashboard settings every time the server restarts.
-* Always use the Web Dashboard UI to save your server name, track, and car settings.
+* Do NOT add extra Pterodactyl variables for game settings (e.g., SERVER_NAME, ADMIN_PASSWORD)[cite: 1]. 
+* The server's startup script monitors these variables. If you change them in the panel, they will overwrite your dashboard saves every time the server restarts[cite: 1].
+* Configure the server name, cars, track, and rules exclusively through the Web Dashboard[cite: 1].
 
 ### Accessing the Web Dashboard
 
-* The dashboard runs internally on port `8090`.
-* Because this port is internal, you must route traffic to it using a Reverse Proxy (like NPMplus) on your network.
+* The web dashboard runs on internal port `8090`[cite: 1].
+* Because this port is internal and explicitly NOT allocated in Pterodactyl, you must route traffic to it via a local reverse proxy (like NPMplus) to the container's internal IP on port `8090`[cite: 1].
 * Point your internal domain (e.g., `ac-server.lan`) to the container's internal IP on port `8090`.
+
+#### Reverse Proxy Troubleshooting
+If you cannot reach the dashboard, you likely screwed up the reverse proxy routing. Ensure your proxy manager is attached to the same Docker network as your Pterodactyl containers (usually `pterodactyl_nw`). You must point your proxy to the local Docker IP of the container itself (e.g., `172.18.0.X`), not the public IP of your Host Node, since port `8090` is deliberately not bound to the host network[cite: 1].
 
 ## Security Disclaimers
 
-* **Permissions:** This Egg utilizes a custom Docker build that elevates to root briefly to create storage symlinks, then immediately drops privileges to USER 1000 (non-root) before the container finishes building. This ensures the server runs in an unprivileged user-space for your security.
-* **Credentials:** Pterodactyl environment variables are stored in plaintext. Use a dedicated Steam account ("burner account") that has no personal payment or sensitive information linked to it.
+* **Permissions:** The build process elevates to `root` only to create necessary system symlinks for persistent storage[cite: 1]. It explicitly drops privileges to USER 1000 before the image is finalized and executed, ensuring the server runs in an unprivileged user-space[cite: 1].
+* **Credentials:** Pterodactyl environment variables are stored in plaintext[cite: 1]. Use a dedicated Steam account ("burner account") that has no personal payment or sensitive information linked to it.
